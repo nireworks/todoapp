@@ -22,9 +22,9 @@ var (
 
 type InMemoryStore struct {
 	counter int64
-
-	mu      sync.RWMutex
 	todoMap map[int]*model.Todo
+
+	sync.RWMutex
 }
 
 func NewInMemoryStore() *InMemoryStore {
@@ -38,8 +38,8 @@ func (ims *InMemoryStore) Add(todo *model.Todo) error {
 
 	todo.Id = ims.getId()
 
-	ims.mu.Lock()
-	defer ims.mu.Unlock()
+	ims.Lock()
+	defer ims.Unlock()
 
 	ims.todoMap[todo.Id] = todo
 
@@ -47,8 +47,8 @@ func (ims *InMemoryStore) Add(todo *model.Todo) error {
 }
 
 func (ims *InMemoryStore) GetById(id int) (*model.Todo, error) {
-	ims.mu.RLock()
-	defer ims.mu.RUnlock()
+	ims.RLock()
+	defer ims.RUnlock()
 
 	todo, ok := ims.todoMap[id]
 	if !ok {
@@ -59,8 +59,8 @@ func (ims *InMemoryStore) GetById(id int) (*model.Todo, error) {
 }
 
 func (ims *InMemoryStore) GetAll() ([]*model.Todo, error) {
-	ims.mu.RLock()
-	defer ims.mu.RUnlock()
+	ims.RLock()
+	defer ims.RUnlock()
 
 	list := make([]*model.Todo, len(ims.todoMap))
 
@@ -74,8 +74,8 @@ func (ims *InMemoryStore) GetAll() ([]*model.Todo, error) {
 }
 
 func (ims *InMemoryStore) Delete(todo *model.Todo) error {
-	ims.mu.Lock()
-	defer ims.mu.Unlock()
+	ims.Lock()
+	defer ims.Unlock()
 
 	delete(ims.todoMap, todo.Id)
 
