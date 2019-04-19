@@ -1,6 +1,7 @@
 package store
 
 import (
+	"sort"
 	"testing"
 	"todoapp/model"
 
@@ -178,6 +179,9 @@ func TestInMemoryStore_GetAll(t *testing.T) {
 				return
 			}
 
+			sort.Sort(ById(readTodos))
+			sort.Sort(ById(tt.todos))
+
 			if assert.Equal(t, len(tt.todos), len(readTodos)) {
 				for i, todo := range readTodos {
 					assert.Equal(t, tt.todos[i], todo)
@@ -242,3 +246,9 @@ func TestInMemoryStore_Delete(t *testing.T) {
 		})
 	}
 }
+
+type ById []*model.Todo
+
+func (a ById) Len() int           { return len(a) }
+func (a ById) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ById) Less(i, j int) bool { return a[i].Id < a[j].Id }
