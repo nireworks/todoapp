@@ -43,6 +43,7 @@ func TestInMemoryStore_Add(t *testing.T) {
 			true,
 		},
 	}
+
 	for _, tt := range tests {
 		ims := NewInMemoryStore()
 
@@ -92,6 +93,7 @@ func TestInMemoryStore_GetById(t *testing.T) {
 			true,
 		},
 	}
+
 	for _, tt := range tests {
 		ims := NewInMemoryStore()
 
@@ -131,43 +133,24 @@ func TestInMemoryStore_GetAll(t *testing.T) {
 		{
 			"one element",
 			[]*model.Todo{
-				&model.Todo{
-					Id:        1,
-					Title:     "Say hello",
-					Completed: false,
-				},
+				{Title: "Say hello", Completed: false},
 			},
 			false,
 		},
 		{
 			"two elements",
 			[]*model.Todo{
-				&model.Todo{
-					Title:     "Say hello",
-					Completed: false,
-				},
-				&model.Todo{
-					Title:     "Say Goodbye",
-					Completed: false,
-				},
+				{Title: "Say hello", Completed: false},
+				{Title: "Say Goodbye", Completed: false},
 			},
 			false,
 		},
 		{
 			"three elements",
 			[]*model.Todo{
-				&model.Todo{
-					Title:     "Say hello",
-					Completed: false,
-				},
-				&model.Todo{
-					Title:     "Say Goodbye",
-					Completed: false,
-				},
-				&model.Todo{
-					Title:     "Say Whatever",
-					Completed: false,
-				},
+				{Title: "Say hello", Completed: false},
+				{Title: "Say Goodbye", Completed: false},
+				{Title: "Say Whatever", Completed: false},
 			},
 			false,
 		},
@@ -200,7 +183,6 @@ func TestInMemoryStore_GetAll(t *testing.T) {
 					assert.Equal(t, tt.todos[i], todo)
 				}
 			}
-
 		})
 	}
 }
