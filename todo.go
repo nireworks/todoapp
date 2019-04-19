@@ -3,13 +3,17 @@ package todoapp
 import (
 	"fmt"
 	"todoapp/model"
+	"todoapp/store"
 )
 
 type TodoApp struct {
+	backend store.Store
 }
 
 func New() *TodoApp {
-	return &TodoApp{}
+	return &TodoApp{
+		backend: store.NewInMemoryStore(),
+	}
 }
 
 func (t *TodoApp) GetTodo(index int) (*model.Todo, error) {
