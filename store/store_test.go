@@ -37,6 +37,11 @@ func TestInMemoryStore_Add(t *testing.T) {
 			},
 			true,
 		},
+		{
+			"nil todo",
+			nil,
+			true,
+		},
 	}
 	for _, tt := range tests {
 		ims := NewInMemoryStore()

@@ -16,6 +16,7 @@ type Store interface {
 
 var (
 	ErrInvalidTodo  = errors.New("invalid todo")
+	ErrNilTodo      = errors.New("nil todo")
 	ErrTodoNotFound = errors.New("todo not found")
 )
 
@@ -31,8 +32,8 @@ func NewInMemoryStore() *InMemoryStore {
 }
 
 func (ims *InMemoryStore) Add(todo *model.Todo) error {
-	if !isValid(todo) {
-		return ErrInvalidTodo
+	if err := isValid(todo); err != nil {
+		return err
 	}
 
 	todo.Id = ims.getId()
@@ -87,6 +88,14 @@ func (ims *InMemoryStore) getId() int {
 	return int(ims.counter)
 }
 
-func isValid(todo *model.Todo) bool {
-	return todo.Title != ""
+func isValid(todo *model.Todo) error {
+	if todo == nil {
+		return ErrNilTodo
+	}
+
+	if todo.Title == "" {
+		return ErrInvalidTodo
+	}
+
+	return nil
 }
