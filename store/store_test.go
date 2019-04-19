@@ -22,6 +22,15 @@ func TestInMemoryStore_Add(t *testing.T) {
 			},
 			false,
 		},
+		{
+			"missing title",
+			&model.Todo{
+				Id:        1,
+				Title:     "",
+				Completed: false,
+			},
+			true,
+		},
 	}
 	for _, tt := range tests {
 		ims := NewInMemoryStore()
@@ -78,14 +87,18 @@ func TestInMemoryStore_GetById(t *testing.T) {
 
 		t.Run(tt.name, func(t *testing.T) {
 			err := ims.Add(tt.todo)
-			if assert.Error(t, err) {
-				t.Fail()
+			if err != nil {
+				t.Errorf("Failed adding todo: %v", err)
 				return
 			}
 
 			readTodo, err := ims.GetById(tt.byId)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetById(%d) wantErr=%t, but got: %v", tt.byId, tt.wantErr, err)
+				return
+			}
+
+			if tt.wantErr {
 				return
 			}
 
