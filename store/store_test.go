@@ -49,7 +49,6 @@ func TestInMemoryStore_Add(t *testing.T) {
 			if assert.NoError(t, err) {
 				assert.Equal(t, tt.todo, readTodo)
 			}
-
 		})
 	}
 }
@@ -103,6 +102,94 @@ func TestInMemoryStore_GetById(t *testing.T) {
 			}
 
 			assert.Equal(t, tt.todo, readTodo)
+		})
+	}
+}
+
+func TestInMemoryStore_GetAll(t *testing.T) {
+	tests := []struct {
+		name    string
+		todos   []*model.Todo
+		wantErr bool
+	}{
+		{
+			"no elements",
+			[]*model.Todo{},
+			false,
+		},
+		{
+			"one element",
+			[]*model.Todo{
+				&model.Todo{
+					Id:        1,
+					Title:     "Say hello",
+					Completed: false,
+				},
+			},
+			false,
+		},
+		{
+			"two elements",
+			[]*model.Todo{
+				&model.Todo{
+					Title:     "Say hello",
+					Completed: false,
+				},
+				&model.Todo{
+					Title:     "Say Goodbye",
+					Completed: false,
+				},
+			},
+			false,
+		},
+		{
+			"three elements",
+			[]*model.Todo{
+				&model.Todo{
+					Title:     "Say hello",
+					Completed: false,
+				},
+				&model.Todo{
+					Title:     "Say Goodbye",
+					Completed: false,
+				},
+				&model.Todo{
+					Title:     "Say Whatever",
+					Completed: false,
+				},
+			},
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		ims := NewInMemoryStore()
+
+		t.Run(tt.name, func(t *testing.T) {
+			for _, todo := range tt.todos {
+				err := ims.Add(todo)
+				if err != nil {
+					t.Errorf("Failed adding todo: %v", err)
+					return
+				}
+			}
+
+			readTodos, err := ims.GetAll()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetAll() wantErr=%t, but got: %v", tt.wantErr, err)
+				return
+			}
+
+			if tt.wantErr {
+				return
+			}
+
+			if assert.Equal(t, len(tt.todos), len(readTodos)) {
+				for i, todo := range readTodos {
+					assert.Equal(t, tt.todos[i], todo)
+				}
+			}
+
 		})
 	}
 }

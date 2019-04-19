@@ -27,6 +27,10 @@ type InMemoryStore struct {
 	todoMap map[int]*model.Todo
 }
 
+func NewInMemoryStore() *InMemoryStore {
+	return &InMemoryStore{todoMap: make(map[int]*model.Todo)}
+}
+
 func (ims *InMemoryStore) Add(todo *model.Todo) error {
 	if !isValid(todo) {
 		return ErrInvalidTodo
@@ -55,7 +59,18 @@ func (ims *InMemoryStore) GetById(id int) (*model.Todo, error) {
 }
 
 func (ims *InMemoryStore) GetAll() ([]*model.Todo, error) {
-	return nil, fmt.Errorf("not implemented")
+	ims.mu.RLock()
+	defer ims.mu.RUnlock()
+
+	list := make([]*model.Todo, len(ims.todoMap))
+
+	counter := 0
+	for _, todo := range ims.todoMap {
+		list[counter] = todo
+		counter++
+	}
+
+	return list, nil
 }
 
 func (ims *InMemoryStore) Delete(*model.Todo) error {
@@ -66,10 +81,6 @@ func (ims *InMemoryStore) getId() int {
 	atomic.AddInt64(&ims.counter, 1)
 
 	return int(ims.counter)
-}
-
-func NewInMemoryStore() *InMemoryStore {
-	return &InMemoryStore{todoMap: make(map[int]*model.Todo)}
 }
 
 func isValid(todo *model.Todo) bool {
