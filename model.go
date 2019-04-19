@@ -1,14 +1,9 @@
 package todoapp
 
-type TodoService interface {
-	GetTodo(int) (Todo, error)
-	GetTodos() ([]Todo, error)
-	SaveTodo(Todo) error
-}
+import "todoapp/model"
 
-// Todo is the underlying structure that is bein handled by the TodoService
-type Todo struct {
-	Id        int
-	Title     string
-	Completed bool
+type TodoService interface {
+	GetTodo(int) (*model.Todo, error)
+	GetTodos() ([]*model.Todo, error)
+	SaveTodo(*model.Todo) error
 }
