@@ -4,26 +4,21 @@ import (
 	"reflect"
 	"testing"
 	"todoapp"
+	"todoapp/model"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func setup() {
-
-}
-
 func TestTodoApp_GetTodo(t *testing.T) {
-	type args struct {
-	}
 	tests := []struct {
 		name    string
-		todo    todoapp.Todo
+		todo    *model.Todo
 		getID   int
 		wantErr bool
 	}{
 		{
 			name: "First working",
-			todo: todoapp.Todo{
+			todo: &model.Todo{
 				Id:        1,
 				Title:     "Say hello",
 				Completed: true,
@@ -33,13 +28,23 @@ func TestTodoApp_GetTodo(t *testing.T) {
 		},
 		{
 			name: "Second working",
-			todo: todoapp.Todo{
+			todo: &model.Todo{
 				Id:        2,
 				Title:     "Say goodbye",
 				Completed: false,
 			},
-			getID:   1,
+			getID:   2,
 			wantErr: false,
+		},
+		{
+			name: "Not found",
+			todo: &model.Todo{
+				Id:        3,
+				Title:     "Find it",
+				Completed: false,
+			},
+			getID:   4,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -47,7 +52,10 @@ func TestTodoApp_GetTodo(t *testing.T) {
 			ta := todoapp.New()
 
 			err := ta.SaveTodo(tt.todo)
-			assert.NoError(t, err)
+			if assert.Error(t, err) {
+				t.Errorf("Saving todo item failed: %v", err)
+				return
+			}
 
 			got, err := ta.GetTodo(tt.getID)
 			if (err != nil) != tt.wantErr {
