@@ -7,6 +7,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestNewInMemoryStore(t *testing.T) {
+	ims := NewInMemoryStore()
+
+	assert.NotNil(t, ims.todoMap)
+}
+
 func TestInMemoryStore_Add(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -194,8 +200,58 @@ func TestInMemoryStore_GetAll(t *testing.T) {
 	}
 }
 
-func TestNewInMemoryStore(t *testing.T) {
-	ims := NewInMemoryStore()
+func TestInMemoryStore_Delete(t *testing.T) {
+	tests := []struct {
+		name           string
+		todo           *model.Todo
+		wantErr        bool
+		deleteId       int
+		expectedLength int
+	}{
+		{
+			"Delete one entry",
+			&model.Todo{
+				Id:        1,
+				Title:     "Say hello",
+				Completed: false,
+			},
+			false,
+			1,
+			0,
+		},
+		{
+			"Delete non-existent entry",
+			&model.Todo{
+				Id:        1,
+				Title:     "Say hello",
+				Completed: false,
+			},
+			false,
+			2,
+			1,
+		},
+	}
+	for _, tt := range tests {
+		ims := NewInMemoryStore()
 
-	assert.NotNil(t, ims.todoMap)
+		t.Run(tt.name, func(t *testing.T) {
+			err := ims.Add(tt.todo)
+			if err != nil {
+				t.Errorf("Failed adding todo: %v", err)
+				return
+			}
+
+			err = ims.Delete(&model.Todo{Id: tt.deleteId})
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Delete(%d) wantErr=%t, but got: %v", tt.deleteId, tt.wantErr, err)
+				return
+			}
+
+			if tt.wantErr {
+				return
+			}
+
+			assert.Equal(t, len(ims.todoMap), tt.expectedLength)
+		})
+	}
 }

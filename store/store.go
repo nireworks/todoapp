@@ -2,7 +2,6 @@ package store
 
 import (
 	"errors"
-	"fmt"
 	"sync"
 	"sync/atomic"
 	"todoapp/model"
@@ -73,8 +72,13 @@ func (ims *InMemoryStore) GetAll() ([]*model.Todo, error) {
 	return list, nil
 }
 
-func (ims *InMemoryStore) Delete(*model.Todo) error {
-	return fmt.Errorf("not implemented")
+func (ims *InMemoryStore) Delete(todo *model.Todo) error {
+	ims.mu.Lock()
+	defer ims.mu.Unlock()
+
+	delete(ims.todoMap, todo.Id)
+
+	return nil
 }
 
 func (ims *InMemoryStore) getId() int {
