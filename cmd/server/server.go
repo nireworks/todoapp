@@ -115,7 +115,16 @@ func (s *Server) addTodo() http.HandlerFunc {
 		w.Header().Set(contentTypeKey, applicationJSON)
 		w.WriteHeader(http.StatusOK)
 
-		_, err = w.Write([]byte("Success!"))
+		resp, err := json.Marshal(todo)
+		if err != nil {
+			s.sendFailure(w, ErrJSONEncodeFailed, err, http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set(contentTypeKey, applicationJSON)
+		w.WriteHeader(http.StatusOK)
+
+		_, err = w.Write(resp)
 		if err != nil {
 			s.sendFailure(w, ErrResponseWriteFailed, err, http.StatusInternalServerError)
 			return
