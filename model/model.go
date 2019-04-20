@@ -1,6 +1,9 @@
 package model
 
-import "errors"
+import (
+	"errors"
+	"sort"
+)
 
 var (
 	ErrInvalidTodo = errors.New("invalid todo")
@@ -24,4 +27,12 @@ func (t *Todo) IsValid() error {
 	}
 
 	return nil
+}
+
+func SortByTitle(todos []*Todo) {
+	sort.Slice(todos, func(i, j int) bool { return todos[i].Title < todos[j].Title })
+}
+
+func SortById(todos []*Todo) {
+	sort.Slice(todos, func(i, j int) bool { return todos[i].Id < todos[j].Id })
 }
