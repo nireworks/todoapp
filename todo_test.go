@@ -88,6 +88,14 @@ func TestTodoApp_SaveTodo(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "Two todos",
+			todos: []*model.Todo{
+				{Title: "Say hello", Completed: true},
+				{Title: "Say bye", Completed: true},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -162,6 +170,9 @@ func TestTodoApp_GetTodos(t *testing.T) {
 			}
 
 			assert.Equal(t, len(allTodos), len(tt.todos))
+
+			model.SortById(allTodos)
+			model.SortById(tt.todos)
 
 			for i, todo := range tt.todos {
 				assert.Equal(t, todo, allTodos[i])
