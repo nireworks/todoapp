@@ -75,13 +75,13 @@ func (s *Server) getTodos() http.HandlerFunc {
 		todos, err := s.service.GetTodos()
 
 		if err != nil {
-			s.sendFailure(w, fmt.Sprintf("%v: %v", ErrFetchTodoFailed, err), http.StatusInternalServerError)
+			s.sendFailure(w, ErrFetchTodoFailed, err, http.StatusInternalServerError)
 			return
 		}
 
 		resp, err := json.Marshal(todos)
 		if err != nil {
-			s.sendFailure(w, fmt.Sprintf("%v: %v", ErrJSONEncodeFailed, err), http.StatusInternalServerError)
+			s.sendFailure(w, ErrJSONEncodeFailed, err, http.StatusInternalServerError)
 			return
 		}
 
@@ -90,7 +90,7 @@ func (s *Server) getTodos() http.HandlerFunc {
 
 		_, err = w.Write(resp)
 		if err != nil {
-			s.sendFailure(w, fmt.Sprintf("%v: %v", ErrResponseWriteFailed, err), http.StatusInternalServerError)
+			s.sendFailure(w, ErrResponseWriteFailed, err, http.StatusInternalServerError)
 			return
 		}
 	}
@@ -102,13 +102,13 @@ func (s *Server) addTodo() http.HandlerFunc {
 
 		err := json.NewDecoder(r.Body).Decode(&todo)
 		if err != nil {
-			s.sendFailure(w, fmt.Sprintf("%v: %v", ErrJSONDecodeFailed, err), http.StatusBadRequest)
+			s.sendFailure(w, ErrJSONDecodeFailed, err, http.StatusBadRequest)
 			return
 		}
 
 		err = s.service.SaveTodo(&todo)
 		if err != nil {
-			s.sendFailure(w, fmt.Sprintf("%v: %v", ErrSaveFailed, err), http.StatusInternalServerError)
+			s.sendFailure(w, ErrSaveFailed, err, http.StatusInternalServerError)
 			return
 		}
 
@@ -117,7 +117,7 @@ func (s *Server) addTodo() http.HandlerFunc {
 
 		_, err = w.Write([]byte("Success!"))
 		if err != nil {
-			s.sendFailure(w, fmt.Sprintf("%v: %v", ErrResponseWriteFailed, err), http.StatusInternalServerError)
+			s.sendFailure(w, ErrResponseWriteFailed, err, http.StatusInternalServerError)
 			return
 		}
 	}
@@ -130,14 +130,14 @@ func (s *Server) updateTodo() http.HandlerFunc {
 	}
 }
 
-func (s *Server) sendFailure(w http.ResponseWriter, errMsg string, status int) {
+func (s *Server) sendFailure(w http.ResponseWriter, errMsg string, err error, status int) {
 	fr := FailResponse{
-		Error: errMsg,
+		Error: fmt.Sprintf("%v: %v", errMsg, err),
 	}
 
 	w.WriteHeader(status)
 
-	err := fr.SendJSON(w)
+	err = fr.SendJSON(w)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("failed sending error: %v", err), http.StatusInternalServerError)
 	}
