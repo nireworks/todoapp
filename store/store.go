@@ -15,8 +15,6 @@ type Store interface {
 }
 
 var (
-	ErrInvalidTodo  = errors.New("invalid todo")
-	ErrNilTodo      = errors.New("nil todo")
 	ErrTodoNotFound = errors.New("todo not found")
 )
 
@@ -32,7 +30,7 @@ func NewInMemoryStore() *InMemoryStore {
 }
 
 func (ims *InMemoryStore) Add(todo *model.Todo) error {
-	if err := isValid(todo); err != nil {
+	if err := todo.IsValid(); err != nil {
 		return err
 	}
 
@@ -86,16 +84,4 @@ func (ims *InMemoryStore) getId() int {
 	atomic.AddInt64(&ims.counter, 1)
 
 	return int(ims.counter)
-}
-
-func isValid(todo *model.Todo) error {
-	if todo == nil {
-		return ErrNilTodo
-	}
-
-	if todo.Title == "" {
-		return ErrInvalidTodo
-	}
-
-	return nil
 }
