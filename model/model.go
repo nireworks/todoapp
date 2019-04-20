@@ -12,9 +12,9 @@ var (
 
 // Todo is the underlying structure that is bein handled by the TodoService
 type Todo struct {
-	Id        int
-	Title     string
-	Completed bool
+	Id        int    `json:"id"`
+	Title     string `json:"title"`
+	Completed bool   `json:"completed"`
 }
 
 func (t *Todo) IsValid() error {
