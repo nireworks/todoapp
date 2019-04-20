@@ -4,6 +4,7 @@ import (
 	"testing"
 	"todoapp"
 	"todoapp/model"
+	"todoapp/store"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -45,7 +46,7 @@ func TestTodoApp_GetTodo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ta := todoapp.New()
+			ta := todoapp.New(store.NewInMemoryStore())
 
 			err := ta.SaveTodo(tt.todo)
 			if err != nil {
@@ -99,7 +100,7 @@ func TestTodoApp_SaveTodo(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ta := todoapp.New()
+			ta := todoapp.New(store.NewInMemoryStore())
 
 			for _, todo := range tt.todos {
 				err := ta.SaveTodo(todo)
@@ -153,7 +154,7 @@ func TestTodoApp_GetTodos(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ta := todoapp.New()
+			ta := todoapp.New(store.NewInMemoryStore())
 
 			for _, todo := range tt.todos {
 				err := ta.SaveTodo(todo)

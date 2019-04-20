@@ -10,9 +10,9 @@ type TodoApp struct {
 	backend store.Store
 }
 
-func New() *TodoApp {
+func New(backendStore store.Store) *TodoApp {
 	return &TodoApp{
-		backend: store.NewInMemoryStore(),
+		backend: backendStore,
 	}
 }
 
