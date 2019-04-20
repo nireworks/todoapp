@@ -13,6 +13,12 @@ import (
 const (
 	contentTypeKey  = "Content-Type"
 	applicationJSON = "application/json"
+
+	ErrJSONDecodeFailed    = "failed decoding request body"
+	ErrJSONEncodeFailed    = "failed encoding response body"
+	ErrSaveFailed          = "failed saving todo"
+	ErrResponseWriteFailed = "failed writing response"
+	ErrFetchTodoFailed     = "failed fetching todos"
 )
 
 type Server struct {
@@ -69,13 +75,13 @@ func (s *Server) getTodos() http.HandlerFunc {
 		todos, err := s.service.GetTodos()
 
 		if err != nil {
-			http.Error(w, fmt.Sprintf("failed fetching todos: %v", err), http.StatusInternalServerError)
+			s.sendFailure(w, fmt.Sprintf("%v: %v", ErrFetchTodoFailed, err), http.StatusInternalServerError)
 			return
 		}
 
 		resp, err := json.Marshal(todos)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("failed marshalling response: %v", err), http.StatusInternalServerError)
+			s.sendFailure(w, fmt.Sprintf("%v: %v", ErrJSONEncodeFailed, err), http.StatusInternalServerError)
 			return
 		}
 
@@ -84,26 +90,25 @@ func (s *Server) getTodos() http.HandlerFunc {
 
 		_, err = w.Write(resp)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("failed writing response: %v", err), http.StatusInternalServerError)
+			s.sendFailure(w, fmt.Sprintf("%v: %v", ErrResponseWriteFailed, err), http.StatusInternalServerError)
 			return
 		}
 	}
 }
 
 func (s *Server) addTodo() http.HandlerFunc {
-
 	return func(w http.ResponseWriter, r *http.Request) {
 		var todo model.Todo
 
 		err := json.NewDecoder(r.Body).Decode(&todo)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("failed decoding request: %v", err), http.StatusBadRequest)
+			s.sendFailure(w, fmt.Sprintf("%v: %v", ErrJSONDecodeFailed, err), http.StatusBadRequest)
 			return
 		}
 
 		err = s.service.SaveTodo(&todo)
 		if err != nil {
-			http.Error(w, fmt.Sprintf("failed saving todo: %v", err), http.StatusInternalServerError)
+			s.sendFailure(w, fmt.Sprintf("%v: %v", ErrSaveFailed, err), http.StatusInternalServerError)
 			return
 		}
 
@@ -112,7 +117,7 @@ func (s *Server) addTodo() http.HandlerFunc {
 
 		_, err = w.Write([]byte("Success!"))
 		if err != nil {
-			http.Error(w, fmt.Sprintf("failed writing response: %v", err), http.StatusInternalServerError)
+			s.sendFailure(w, fmt.Sprintf("%v: %v", ErrResponseWriteFailed, err), http.StatusInternalServerError)
 			return
 		}
 	}
@@ -122,5 +127,18 @@ func (s *Server) updateTodo() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
+	}
+}
+
+func (s *Server) sendFailure(w http.ResponseWriter, errMsg string, status int) {
+	fr := FailResponse{
+		Error: errMsg,
+	}
+
+	w.WriteHeader(status)
+
+	err := fr.SendJSON(w)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("failed sending error: %v", err), http.StatusInternalServerError)
 	}
 }

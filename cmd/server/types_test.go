@@ -37,6 +37,7 @@ func TestFailResponse_SendJSON(t *testing.T) {
 			}
 			if err := fr.SendJSON(&buf); (err != nil) != tt.wantErr {
 				t.Errorf("FailResponse.Send() error = %v, wantErr %v", err, tt.wantErr)
+				return
 			}
 
 			if tt.wantErr {
