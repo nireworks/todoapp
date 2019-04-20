@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"net/http"
+	"time"
 	"todoapp"
 	"todoapp/cmd/server"
 	"todoapp/store"
@@ -10,7 +12,12 @@ import (
 func main() {
 	service := todoapp.New(store.NewInMemoryStore())
 
-	srv := server.New(service)
+	srv := &http.Server{
+		Handler:      server.New(service),
+		Addr:         ":8000",
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
+	}
 
-	log.Fatal(srv.Server(":8000").ListenAndServe())
+	log.Fatal(srv.ListenAndServe())
 }

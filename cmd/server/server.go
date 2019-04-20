@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 	"todoapp"
 	"todoapp/model"
 
@@ -21,18 +20,21 @@ type Server struct {
 	router  *mux.Router
 }
 
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s.router.ServeHTTP(w, r)
+}
+
 func New(service todoapp.TodoService) *Server {
 	s := &Server{
 		service: service,
 		router:  mux.NewRouter(),
 	}
-
-	routes(s)
+	s.routes()
 
 	return s
 }
 
-func routes(s *Server) {
+func (s *Server) routes() {
 	routes := []struct {
 		path    string
 		handler http.HandlerFunc
@@ -59,15 +61,6 @@ func routes(s *Server) {
 		s.router.
 			HandleFunc(route.path, route.handler).
 			Methods(route.methods...)
-	}
-}
-
-func (s *Server) Server(addr string) *http.Server {
-	return &http.Server{
-		Handler:      s.router,
-		Addr:         addr,
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
 	}
 }
 
