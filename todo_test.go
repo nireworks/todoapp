@@ -67,3 +67,51 @@ func TestTodoApp_GetTodo(t *testing.T) {
 		})
 	}
 }
+
+func TestTodoApp_SaveTodo(t *testing.T) {
+	tests := []struct {
+		name    string
+		todo    *model.Todo
+		wantErr bool
+	}{
+		{
+			name: "First working",
+			todo: &model.Todo{
+				Title:     "Say hello",
+				Completed: true,
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid todo",
+			todo: &model.Todo{
+				Title:     "",
+				Completed: false,
+			},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ta := todoapp.New()
+
+			err := ta.SaveTodo(tt.todo)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("SaveTodo(%v) error=%v, wantErr=%t", tt.todo, err, tt.wantErr)
+				return
+			}
+
+			if tt.wantErr {
+				return
+			}
+
+			got, err := ta.GetTodo(1)
+			if err != nil {
+				t.Errorf("GetTodo() failed: %v", err)
+				return
+			}
+
+			assert.Equal(t, tt.todo, got)
+		})
+	}
+}
