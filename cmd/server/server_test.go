@@ -33,6 +33,31 @@ func TestHandle_GetTodos(t *testing.T) {
 			wantBody:   "[{\"id\":1,\"title\":\"Hey\",\"completed\":false}]",
 			wantStatus: http.StatusOK,
 		},
+		{
+			name: "one todo with all fields",
+			todos: []*model.Todo{
+				{Id: 1, Title: "Hey", Completed: true},
+			},
+			wantBody:   "[{\"id\":1,\"title\":\"Hey\",\"completed\":true}]",
+			wantStatus: http.StatusOK,
+		},
+		{
+			name: "one todo with wrong Id",
+			todos: []*model.Todo{
+				{Id: 10, Title: "Hey", Completed: true},
+			},
+			wantBody:   "[{\"id\":1,\"title\":\"Hey\",\"completed\":true}]",
+			wantStatus: http.StatusOK,
+		},
+		{
+			name: "two todos",
+			todos: []*model.Todo{
+				{Id: 1, Title: "Hey", Completed: true},
+				{Id: 2, Title: "Hello", Completed: false},
+			},
+			wantBody:   "[{\"id\":1,\"title\":\"Hey\",\"completed\":true},{\"id\":2,\"title\":\"Hello\",\"completed\":false}]",
+			wantStatus: http.StatusOK,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -53,7 +78,6 @@ func TestHandle_GetTodos(t *testing.T) {
 
 			assert.Equal(t, tt.wantStatus, w.Code)
 			assert.Equal(t, tt.wantBody, w.Body.String())
-
 		})
 	}
 }
