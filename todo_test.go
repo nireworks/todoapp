@@ -1,7 +1,6 @@
 package todoapp_test
 
 import (
-	"reflect"
 	"testing"
 	"todoapp"
 	"todoapp/model"
@@ -19,7 +18,6 @@ func TestTodoApp_GetTodo(t *testing.T) {
 		{
 			name: "First working",
 			todo: &model.Todo{
-				Id:        1,
 				Title:     "Say hello",
 				Completed: true,
 			},
@@ -29,21 +27,19 @@ func TestTodoApp_GetTodo(t *testing.T) {
 		{
 			name: "Second working",
 			todo: &model.Todo{
-				Id:        2,
 				Title:     "Say goodbye",
 				Completed: false,
 			},
-			getID:   2,
+			getID:   1,
 			wantErr: false,
 		},
 		{
 			name: "Not found",
 			todo: &model.Todo{
-				Id:        3,
 				Title:     "Find it",
 				Completed: false,
 			},
-			getID:   4,
+			getID:   99,
 			wantErr: true,
 		},
 	}
@@ -52,7 +48,7 @@ func TestTodoApp_GetTodo(t *testing.T) {
 			ta := todoapp.New()
 
 			err := ta.SaveTodo(tt.todo)
-			if assert.Error(t, err) {
+			if err != nil {
 				t.Errorf("Saving todo item failed: %v", err)
 				return
 			}
@@ -67,9 +63,7 @@ func TestTodoApp_GetTodo(t *testing.T) {
 				return
 			}
 
-			if !reflect.DeepEqual(got, tt.todo) {
-				t.Errorf("TodoApp.GetTodo() = %v, want %v", got, tt.todo)
-			}
+			assert.Equal(t, tt.todo, got)
 		})
 	}
 }
