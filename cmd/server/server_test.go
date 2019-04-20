@@ -90,16 +90,44 @@ func TestHandler_AddTodo(t *testing.T) {
 	tests := []struct {
 		name       string
 		addTodos   []string
-		wantTodos  []*model.Todo
 		wantStatus int
-		wantBody   string
+		wantBodies []string
 	}{
 		{
 			name:       "nothing to add",
 			addTodos:   []string{""},
-			wantTodos:  []*model.Todo{},
 			wantStatus: http.StatusBadRequest,
-			wantBody:   "{\"error\":\"failed decoding request body: EOF\"}",
+			wantBodies: []string{"{\"error\":\"failed decoding request body: EOF\"}"},
+		},
+		{
+			name:       "Add one",
+			addTodos:   []string{"{\"id\":1,\"title\":\"Hey\",\"completed\":false}"},
+			wantStatus: http.StatusOK,
+			wantBodies: []string{"{\"id\":1,\"title\":\"Hey\",\"completed\":false}"},
+		},
+		{
+			name:       "Add one with no ID",
+			addTodos:   []string{"{\"title\":\"Hey\",\"completed\":false}"},
+			wantStatus: http.StatusOK,
+			wantBodies: []string{"{\"id\":1,\"title\":\"Hey\",\"completed\":false}"},
+		},
+		{
+			name:       "Add one with no id and completed true",
+			addTodos:   []string{"{\"title\":\"Hey\",\"completed\":true}"},
+			wantStatus: http.StatusOK,
+			wantBodies: []string{"{\"id\":1,\"title\":\"Hey\",\"completed\":true}"},
+		},
+		{
+			name: "Add two",
+			addTodos: []string{
+				"{\"title\":\"Hey\",\"completed\":true}",
+				"{\"title\":\"Hey Again\",\"completed\":false}",
+			},
+			wantStatus: http.StatusOK,
+			wantBodies: []string{
+				"{\"id\":1,\"title\":\"Hey\",\"completed\":true}",
+				"{\"id\":2,\"title\":\"Hey Again\",\"completed\":false}",
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -108,7 +136,7 @@ func TestHandler_AddTodo(t *testing.T) {
 
 			srv := server.New(todoapp.New(mockStore))
 
-			for _, todo := range tt.addTodos {
+			for idx, todo := range tt.addTodos {
 				req, err := http.NewRequest(http.MethodPost, "/v0/todos", bytes.NewBuffer([]byte(todo)))
 				assert.NoError(t, err)
 
@@ -116,7 +144,7 @@ func TestHandler_AddTodo(t *testing.T) {
 				srv.ServeHTTP(w, req)
 
 				assert.Equal(t, tt.wantStatus, w.Code)
-				assert.Equal(t, tt.wantBody, w.Body.String())
+				assert.Equal(t, tt.wantBodies[idx], w.Body.String())
 			}
 		})
 	}
