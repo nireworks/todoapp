@@ -71,22 +71,20 @@ func TestTodoApp_GetTodo(t *testing.T) {
 func TestTodoApp_SaveTodo(t *testing.T) {
 	tests := []struct {
 		name    string
-		todo    *model.Todo
+		todos   []*model.Todo
 		wantErr bool
 	}{
 		{
-			name: "First working",
-			todo: &model.Todo{
-				Title:     "Say hello",
-				Completed: true,
+			name: "One todo",
+			todos: []*model.Todo{
+				{Title: "Say hello", Completed: true},
 			},
 			wantErr: false,
 		},
 		{
-			name: "invalid todo",
-			todo: &model.Todo{
-				Title:     "",
-				Completed: false,
+			name: "One invalid todo",
+			todos: []*model.Todo{
+				{Title: "", Completed: false},
 			},
 			wantErr: true,
 		},
@@ -95,14 +93,78 @@ func TestTodoApp_SaveTodo(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			ta := todoapp.New()
 
-			err := ta.SaveTodo(tt.todo)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("SaveTodo(%v) error=%v, wantErr=%t", tt.todo, err, tt.wantErr)
+			for _, todo := range tt.todos {
+				err := ta.SaveTodo(todo)
+				if (err != nil) != tt.wantErr {
+					t.Errorf("SaveTodo(%v) error=%v, wantErr=%t", todo, err, tt.wantErr)
+					return
+				}
+
+				if tt.wantErr {
+					return
+				}
+			}
+
+			allTodos, err := ta.GetTodos()
+			if err != nil {
+				t.Errorf("GetTodos() failed: %v", err)
 				return
 			}
 
-			if tt.wantErr {
+			assert.Equal(t, len(allTodos), len(tt.todos))
+
+			got, err := ta.GetTodo(1)
+			if err != nil {
+				t.Errorf("GetTodo() failed: %v", err)
 				return
+			}
+
+			assert.Equal(t, tt.todos[0], got)
+		})
+	}
+}
+
+func TestTodoApp_GetTodos(t *testing.T) {
+	tests := []struct {
+		name  string
+		todos []*model.Todo
+	}{
+		{
+			name: "One todo",
+			todos: []*model.Todo{
+				{Title: "Say hello", Completed: true},
+			},
+		},
+		{
+			name: "Two todos",
+			todos: []*model.Todo{
+				{Title: "Say Hello", Completed: false},
+				{Title: "Say Goodbye", Completed: false},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ta := todoapp.New()
+
+			for _, todo := range tt.todos {
+				err := ta.SaveTodo(todo)
+				if err != nil {
+					t.Errorf("SaveTodo(%v) failed: %v", todo, err)
+					return
+				}
+			}
+
+			allTodos, err := ta.GetTodos()
+			if err != nil {
+				t.Errorf("GetTodos() failed: %v", err)
+				return
+			}
+
+			assert.Equal(t, len(allTodos), len(tt.todos))
+
+			for i, todo := range tt.todos {
+				assert.Equal(t, todo, allTodos[i])
 			}
 
 			got, err := ta.GetTodo(1)
@@ -111,7 +173,7 @@ func TestTodoApp_SaveTodo(t *testing.T) {
 				return
 			}
 
-			assert.Equal(t, tt.todo, got)
+			assert.Equal(t, tt.todos[0], got)
 		})
 	}
 }
