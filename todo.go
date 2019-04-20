@@ -30,7 +30,12 @@ func (t *TodoApp) GetTodo(index int) (*model.Todo, error) {
 }
 
 func (t *TodoApp) GetTodos() ([]*model.Todo, error) {
-	return nil, fmt.Errorf("not implemented")
+	todos, err := t.backend.GetAll()
+	if err != nil {
+		return nil, fmt.Errorf("get all todos: %v", err)
+	}
+
+	return todos, nil
 }
 
 func (t *TodoApp) SaveTodo(todo *model.Todo) error {
