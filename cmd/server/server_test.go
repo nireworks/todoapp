@@ -271,7 +271,7 @@ func TestHandle_UpdateTodo(t *testing.T) {
 			todos: []*model.Todo{
 				{Title: "Hello"},
 			},
-			updateTodo: "{\"id\":1,\"title\":\"Hey\",\"completed\":false}",
+			updateTodo: "{\"id\":1,\"title\":\"Updated\",\"completed\":false}",
 			updateId:   "1",
 			wantStatus: http.StatusOK,
 			wantBody:   "{\"id\":1,\"title\":\"Updated\",\"completed\":false}",
@@ -340,7 +340,7 @@ func TestHandle_UpdateTodo(t *testing.T) {
 			updateTodo: "{\"id\":1,\"title\":\"Updated\",\"completed\":true}",
 			updateId:   "3",
 			wantStatus: http.StatusOK,
-			wantBody:   "{\"id\":2,\"title\":\"Updated\",\"completed\":true}",
+			wantBody:   "{\"id\":3,\"title\":\"Updated\",\"completed\":true}",
 			wantTodos: []*model.Todo{
 				{Id: 1, Title: "First", Completed: false},
 				{Id: 2, Title: "Second", Completed: false},
@@ -369,8 +369,11 @@ func TestHandle_UpdateTodo(t *testing.T) {
 			assert.Equal(t, tt.wantBody, w.Body.String())
 
 			todos, _ := mockStore.GetAll()
+
+			model.SortById(todos)
+			model.SortById(tt.wantTodos)
+
 			for idx, todo := range todos {
-				fmt.Println(idx)
 				assert.Equal(t, tt.wantTodos[idx], todo)
 			}
 		})

@@ -71,7 +71,6 @@ func (ims *InMemoryStore) Update(id int, todo *model.Todo) (*model.Todo, error) 
 	}
 
 	todo.Id = id
-
 	ims.todoMap[id] = todo
 
 	return todo, nil

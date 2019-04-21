@@ -154,15 +154,13 @@ func (s *Server) updateTodo() http.HandlerFunc {
 			return
 		}
 
-		todo.Id = id
-
-		err = s.service.SaveTodo(&todo)
+		updatedTodo, err := s.service.UpdateTodo(id, &todo)
 		if err != nil {
 			s.sendFailure(w, ErrSaveFailed, err, http.StatusInternalServerError)
 			return
 		}
 
-		s.sendSuccess(w, todo)
+		s.sendSuccess(w, updatedTodo)
 	}
 }
 

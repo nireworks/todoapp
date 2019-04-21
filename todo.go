@@ -50,3 +50,16 @@ func (t *TodoApp) SaveTodo(todo *model.Todo) error {
 
 	return nil
 }
+
+func (t *TodoApp) UpdateTodo(id int, todo *model.Todo) (*model.Todo, error) {
+	if err := todo.IsValid(); err != nil {
+		return nil, fmt.Errorf("save todo: %v", err)
+	}
+
+	updatedTodo, err := t.backend.Update(id, todo)
+	if err != nil {
+		return nil, fmt.Errorf("save todo: %v", err)
+	}
+
+	return updatedTodo, nil
+}

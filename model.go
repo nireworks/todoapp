@@ -6,4 +6,5 @@ type TodoService interface {
 	GetTodo(int) (*model.Todo, error)
 	GetTodos() ([]*model.Todo, error)
 	SaveTodo(*model.Todo) error
+	UpdateTodo(int, *model.Todo) (*model.Todo, error)
 }
