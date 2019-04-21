@@ -2,6 +2,7 @@ package server_test
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -73,7 +74,7 @@ func TestHandle_GetTodos(t *testing.T) {
 
 			req, err := http.NewRequest(http.MethodGet, "/v0/todos", nil)
 			if err != nil {
-				t.Errorf("failed constructing post request: %v", err)
+				t.Errorf("failed constructing get request: %v", err)
 				return
 			}
 
@@ -146,6 +147,93 @@ func TestHandler_AddTodo(t *testing.T) {
 				assert.Equal(t, tt.wantStatus, w.Code)
 				assert.Equal(t, tt.wantBodies[idx], w.Body.String())
 			}
+		})
+	}
+}
+
+func TestHandler_GetTodoById(t *testing.T) {
+	tests := []struct {
+		name       string
+		todos      []*model.Todo
+		fetchId    int
+		wantStatus int
+		wantBody   string
+	}{
+		{
+			name: "Fetch non-existent",
+			todos: []*model.Todo{
+				{Title: "Hey"},
+			},
+			fetchId:    99,
+			wantStatus: http.StatusNotFound,
+			wantBody:   "",
+		},
+		{
+			name: "Fetch one",
+			todos: []*model.Todo{
+				{Title: "Hey"},
+			},
+			fetchId:    1,
+			wantStatus: http.StatusOK,
+			wantBody:   "{\"id\":1,\"title\":\"Hey\",\"completed\":false}",
+		},
+		{
+			name: "Fetch first of three",
+			todos: []*model.Todo{
+				{Title: "Hey", Completed: true},
+				{Title: "Hey Again"},
+				{Title: "Good Bye"},
+			},
+			fetchId:    1,
+			wantStatus: http.StatusOK,
+			wantBody:   "{\"id\":1,\"title\":\"Hey\",\"completed\":true}",
+		},
+		{
+			name: "Fetch second of three",
+			todos: []*model.Todo{
+				{Title: "Hey", Completed: true},
+				{Title: "Hey Again"},
+				{Title: "Good Bye"},
+			},
+			fetchId:    2,
+			wantStatus: http.StatusOK,
+			wantBody:   "{\"id\":2,\"title\":\"Hey Again\",\"completed\":false}",
+		},
+		{
+			name: "Fetch third of three",
+			todos: []*model.Todo{
+				{Title: "Hey", Completed: true},
+				{Title: "Hey Again"},
+				{Title: "Good Bye"},
+			},
+			fetchId:    3,
+			wantStatus: http.StatusOK,
+			wantBody:   "{\"id\":3,\"title\":\"Good Bye\",\"completed\":false}",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockStore := store.NewInMemoryStore()
+
+			for _, todo := range tt.todos {
+				err := mockStore.Add(todo)
+				assert.NoError(t, err)
+			}
+
+			srv := server.New(todoapp.New(mockStore))
+
+			url := fmt.Sprintf("/v0/todos/%d", tt.fetchId)
+			req, err := http.NewRequest(http.MethodGet, url, nil)
+			if err != nil {
+				t.Errorf("failed constructing get request: %v", err)
+				return
+			}
+
+			w := httptest.NewRecorder()
+			srv.ServeHTTP(w, req)
+
+			assert.Equal(t, tt.wantStatus, w.Code)
+			assert.Equal(t, tt.wantBody, w.Body.String())
 		})
 	}
 }
