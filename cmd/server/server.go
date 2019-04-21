@@ -61,7 +61,7 @@ func (s *Server) routes() {
 			methods: []string{http.MethodPost},
 		},
 		{
-			path:    "/v0/todos",
+			path:    "/v0/todos/{id}",
 			handler: s.updateTodo(),
 			methods: []string{http.MethodPut},
 		},
@@ -139,7 +139,30 @@ func (s *Server) getTodoById() http.HandlerFunc {
 func (s *Server) updateTodo() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		idString := mux.Vars(r)["id"]
 
+		id, err := strconv.Atoi(idString)
+		if err != nil {
+			s.sendFailure(w, ErrInvalidParameter, fmt.Errorf("'%s' cannot be converted to int", idString), http.StatusBadRequest)
+			return
+		}
+
+		var todo model.Todo
+		err = json.NewDecoder(r.Body).Decode(&todo)
+		if err != nil {
+			s.sendFailure(w, ErrJSONDecodeFailed, err, http.StatusBadRequest)
+			return
+		}
+
+		todo.Id = id
+
+		err = s.service.SaveTodo(&todo)
+		if err != nil {
+			s.sendFailure(w, ErrSaveFailed, err, http.StatusInternalServerError)
+			return
+		}
+
+		s.sendSuccess(w, todo)
 	}
 }
 

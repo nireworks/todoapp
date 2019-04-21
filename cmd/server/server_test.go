@@ -246,3 +246,133 @@ func TestHandler_GetTodoById(t *testing.T) {
 		})
 	}
 }
+
+func TestHandle_UpdateTodo(t *testing.T) {
+	tests := []struct {
+		name       string
+		todos      []*model.Todo
+		updateTodo string
+		updateId   string
+		wantStatus int
+		wantBody   string
+		wantTodos  []*model.Todo
+	}{
+		{
+			name:       "empty request",
+			todos:      []*model.Todo{},
+			updateId:   "1",
+			updateTodo: "",
+			wantStatus: http.StatusBadRequest,
+			wantBody:   "{\"error\":\"failed decoding request body: EOF\"}",
+			wantTodos:  []*model.Todo{},
+		},
+		{
+			name: "Update existing",
+			todos: []*model.Todo{
+				{Title: "Hello"},
+			},
+			updateTodo: "{\"id\":1,\"title\":\"Hey\",\"completed\":false}",
+			updateId:   "1",
+			wantStatus: http.StatusOK,
+			wantBody:   "{\"id\":1,\"title\":\"Updated\",\"completed\":false}",
+			wantTodos: []*model.Todo{
+				{Id: 1, Title: "Updated", Completed: false},
+			},
+		},
+		{
+			name: "Update first of three",
+			todos: []*model.Todo{
+				{Title: "First"},
+				{Title: "Second"},
+				{Title: "Third"},
+			},
+			updateTodo: "{\"id\":1,\"title\":\"Updated\",\"completed\":true}",
+			updateId:   "1",
+			wantStatus: http.StatusOK,
+			wantBody:   "{\"id\":1,\"title\":\"Updated\",\"completed\":true}",
+			wantTodos: []*model.Todo{
+				{Id: 1, Title: "Updated", Completed: true},
+				{Id: 2, Title: "Second", Completed: false},
+				{Id: 3, Title: "Third", Completed: false},
+			},
+		},
+		{
+			name: "Update second of three",
+			todos: []*model.Todo{
+				{Title: "First"},
+				{Title: "Second"},
+				{Title: "Third"},
+			},
+			updateTodo: "{\"id\":2,\"title\":\"Updated\",\"completed\":true}",
+			updateId:   "2",
+			wantStatus: http.StatusOK,
+			wantBody:   "{\"id\":2,\"title\":\"Updated\",\"completed\":true}",
+			wantTodos: []*model.Todo{
+				{Id: 1, Title: "First", Completed: false},
+				{Id: 2, Title: "Updated", Completed: true},
+				{Id: 3, Title: "Third", Completed: false},
+			},
+		},
+		{
+			name: "Update third of three",
+			todos: []*model.Todo{
+				{Title: "First"},
+				{Title: "Second"},
+				{Title: "Third"},
+			},
+			updateTodo: "{\"id\":3,\"title\":\"Updated\",\"completed\":true}",
+			updateId:   "3",
+			wantStatus: http.StatusOK,
+			wantBody:   "{\"id\":3,\"title\":\"Updated\",\"completed\":true}",
+			wantTodos: []*model.Todo{
+				{Id: 1, Title: "First", Completed: false},
+				{Id: 2, Title: "Second", Completed: false},
+				{Id: 3, Title: "Updated", Completed: true},
+			},
+		},
+		{
+			name: "Ignore ID in payload",
+			todos: []*model.Todo{
+				{Title: "First"},
+				{Title: "Second"},
+				{Title: "Third"},
+			},
+			updateTodo: "{\"id\":1,\"title\":\"Updated\",\"completed\":true}",
+			updateId:   "3",
+			wantStatus: http.StatusOK,
+			wantBody:   "{\"id\":2,\"title\":\"Updated\",\"completed\":true}",
+			wantTodos: []*model.Todo{
+				{Id: 1, Title: "First", Completed: false},
+				{Id: 2, Title: "Second", Completed: false},
+				{Id: 3, Title: "Updated", Completed: true},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mockStore := store.NewInMemoryStore()
+
+			for _, todo := range tt.todos {
+				err := mockStore.Add(todo)
+				assert.NoError(t, err)
+			}
+
+			srv := server.New(todoapp.New(mockStore))
+			url := fmt.Sprintf("/v0/todos/%s", tt.updateId)
+			req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer([]byte(tt.updateTodo)))
+			assert.NoError(t, err)
+
+			w := httptest.NewRecorder()
+			srv.ServeHTTP(w, req)
+
+			assert.Equal(t, tt.wantStatus, w.Code)
+			assert.Equal(t, tt.wantBody, w.Body.String())
+
+			todos, _ := mockStore.GetAll()
+			for idx, todo := range todos {
+				fmt.Println(idx)
+				assert.Equal(t, tt.wantTodos[idx], todo)
+			}
+		})
+	}
+}
