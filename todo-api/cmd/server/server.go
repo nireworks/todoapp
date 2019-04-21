@@ -40,6 +40,7 @@ func New(service todoapp.TodoService) *Server {
 		router:  mux.NewRouter(),
 	}
 	s.routes()
+	s.middlewares()
 
 	return s
 }
@@ -76,6 +77,17 @@ func (s *Server) routes() {
 		s.router.
 			HandleFunc(route.path, route.handler).
 			Methods(route.methods...)
+	}
+}
+
+func (s *Server) middlewares() {
+	mws := []mux.MiddlewareFunc{
+		s.mwLogger,
+		s.mwTimer,
+	}
+
+	for _, mw := range mws {
+		s.router.Use(mw)
 	}
 }
 

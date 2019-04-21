@@ -19,5 +19,6 @@ func main() {
 		ReadTimeout:  15 * time.Second,
 	}
 
+	log.Printf("starting to listen on %v", srv.Addr)
 	log.Fatal(srv.ListenAndServe())
 }
