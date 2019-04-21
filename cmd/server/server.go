@@ -82,26 +82,12 @@ func (s *Server) routes() {
 func (s *Server) getTodos() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		todos, err := s.service.GetTodos()
-
 		if err != nil {
 			s.sendFailure(w, ErrFetchTodoFailed, err, http.StatusInternalServerError)
 			return
 		}
 
-		resp, err := json.Marshal(todos)
-		if err != nil {
-			s.sendFailure(w, ErrJSONEncodeFailed, err, http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set(contentTypeKey, applicationJSON)
-		w.WriteHeader(http.StatusOK)
-
-		_, err = w.Write(resp)
-		if err != nil {
-			s.sendFailure(w, ErrResponseWriteFailed, err, http.StatusInternalServerError)
-			return
-		}
+		s.sendSuccess(w, todos)
 	}
 }
 
@@ -121,23 +107,7 @@ func (s *Server) addTodo() http.HandlerFunc {
 			return
 		}
 
-		w.Header().Set(contentTypeKey, applicationJSON)
-		w.WriteHeader(http.StatusOK)
-
-		resp, err := json.Marshal(todo)
-		if err != nil {
-			s.sendFailure(w, ErrJSONEncodeFailed, err, http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set(contentTypeKey, applicationJSON)
-		w.WriteHeader(http.StatusOK)
-
-		_, err = w.Write(resp)
-		if err != nil {
-			s.sendFailure(w, ErrResponseWriteFailed, err, http.StatusInternalServerError)
-			return
-		}
+		s.sendSuccess(w, todo)
 	}
 }
 
@@ -163,27 +133,30 @@ func (s *Server) getTodoById() http.HandlerFunc {
 			return
 		}
 
-		resp, err := json.Marshal(todo)
-		if err != nil {
-			s.sendFailure(w, ErrJSONEncodeFailed, err, http.StatusInternalServerError)
-			return
-		}
-
-		w.Header().Set(contentTypeKey, applicationJSON)
-		w.WriteHeader(http.StatusOK)
-
-		_, err = w.Write(resp)
-		if err != nil {
-			s.sendFailure(w, ErrResponseWriteFailed, err, http.StatusInternalServerError)
-			return
-		}
+		s.sendSuccess(w, todo)
 	}
 }
-
 func (s *Server) updateTodo() http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 
+	}
+}
+
+func (s *Server) sendSuccess(w http.ResponseWriter, payload interface{}) {
+	resp, err := json.Marshal(payload)
+	if err != nil {
+		s.sendFailure(w, ErrJSONEncodeFailed, err, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set(contentTypeKey, applicationJSON)
+	w.WriteHeader(http.StatusOK)
+
+	_, err = w.Write(resp)
+	if err != nil {
+		s.sendFailure(w, ErrResponseWriteFailed, err, http.StatusInternalServerError)
+		return
 	}
 }
 
