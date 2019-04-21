@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"todoapp"
 	"todoapp/model"
+	"todoapp/store"
 
 	"github.com/gorilla/mux"
 )
@@ -19,6 +21,8 @@ const (
 	ErrSaveFailed          = "failed saving todo"
 	ErrResponseWriteFailed = "failed writing response"
 	ErrFetchTodoFailed     = "failed fetching todos"
+	ErrInvalidParameter    = "invalid parameter"
+	ErrUnknownError        = "something went wrong"
 )
 
 type Server struct {
@@ -60,6 +64,11 @@ func (s *Server) routes() {
 			path:    "/v0/todos",
 			handler: s.updateTodo(),
 			methods: []string{http.MethodPut},
+		},
+		{
+			path:    "/v0/todos/{id}",
+			handler: s.getTodoById(),
+			methods: []string{http.MethodGet},
 		},
 	}
 
@@ -114,6 +123,45 @@ func (s *Server) addTodo() http.HandlerFunc {
 
 		w.Header().Set(contentTypeKey, applicationJSON)
 		w.WriteHeader(http.StatusOK)
+
+		resp, err := json.Marshal(todo)
+		if err != nil {
+			s.sendFailure(w, ErrJSONEncodeFailed, err, http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set(contentTypeKey, applicationJSON)
+		w.WriteHeader(http.StatusOK)
+
+		_, err = w.Write(resp)
+		if err != nil {
+			s.sendFailure(w, ErrResponseWriteFailed, err, http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func (s *Server) getTodoById() http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		idString := mux.Vars(r)["id"]
+
+		id, err := strconv.Atoi(idString)
+		if err != nil {
+			s.sendFailure(w, ErrInvalidParameter, fmt.Errorf("'%s' cannot be converted to int", idString), http.StatusBadRequest)
+			return
+		}
+
+		todo, err := s.service.GetTodo(id)
+		if err != nil {
+			if err == store.ErrTodoNotFound {
+				s.sendFailure(w, "fetch with id "+idString, err, http.StatusNotFound)
+				return
+			}
+
+			s.sendFailure(w, ErrUnknownError, err, http.StatusInternalServerError)
+			return
+		}
 
 		resp, err := json.Marshal(todo)
 		if err != nil {

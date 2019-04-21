@@ -155,7 +155,7 @@ func TestHandler_GetTodoById(t *testing.T) {
 	tests := []struct {
 		name       string
 		todos      []*model.Todo
-		fetchId    int
+		fetchId    string
 		wantStatus int
 		wantBody   string
 	}{
@@ -164,16 +164,25 @@ func TestHandler_GetTodoById(t *testing.T) {
 			todos: []*model.Todo{
 				{Title: "Hey"},
 			},
-			fetchId:    99,
+			fetchId:    "99",
 			wantStatus: http.StatusNotFound,
-			wantBody:   "",
+			wantBody:   "{\"error\":\"fetch with id 99: todo not found\"}",
+		},
+		{
+			name: "Fetch non-int",
+			todos: []*model.Todo{
+				{Title: "Hey"},
+			},
+			fetchId:    "asd",
+			wantStatus: http.StatusBadRequest,
+			wantBody:   "{\"error\":\"invalid parameter: 'asd' cannot be converted to int\"}",
 		},
 		{
 			name: "Fetch one",
 			todos: []*model.Todo{
 				{Title: "Hey"},
 			},
-			fetchId:    1,
+			fetchId:    "1",
 			wantStatus: http.StatusOK,
 			wantBody:   "{\"id\":1,\"title\":\"Hey\",\"completed\":false}",
 		},
@@ -184,7 +193,7 @@ func TestHandler_GetTodoById(t *testing.T) {
 				{Title: "Hey Again"},
 				{Title: "Good Bye"},
 			},
-			fetchId:    1,
+			fetchId:    "1",
 			wantStatus: http.StatusOK,
 			wantBody:   "{\"id\":1,\"title\":\"Hey\",\"completed\":true}",
 		},
@@ -195,7 +204,7 @@ func TestHandler_GetTodoById(t *testing.T) {
 				{Title: "Hey Again"},
 				{Title: "Good Bye"},
 			},
-			fetchId:    2,
+			fetchId:    "2",
 			wantStatus: http.StatusOK,
 			wantBody:   "{\"id\":2,\"title\":\"Hey Again\",\"completed\":false}",
 		},
@@ -206,7 +215,7 @@ func TestHandler_GetTodoById(t *testing.T) {
 				{Title: "Hey Again"},
 				{Title: "Good Bye"},
 			},
-			fetchId:    3,
+			fetchId:    "3",
 			wantStatus: http.StatusOK,
 			wantBody:   "{\"id\":3,\"title\":\"Good Bye\",\"completed\":false}",
 		},
@@ -222,7 +231,7 @@ func TestHandler_GetTodoById(t *testing.T) {
 
 			srv := server.New(todoapp.New(mockStore))
 
-			url := fmt.Sprintf("/v0/todos/%d", tt.fetchId)
+			url := fmt.Sprintf("/v0/todos/%s", tt.fetchId)
 			req, err := http.NewRequest(http.MethodGet, url, nil)
 			if err != nil {
 				t.Errorf("failed constructing get request: %v", err)
