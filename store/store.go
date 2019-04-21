@@ -9,6 +9,7 @@ import (
 
 type Store interface {
 	Add(*model.Todo) error
+	Update(int, *model.Todo) (*model.Todo, error)
 	GetById(int) (*model.Todo, error)
 	GetAll() ([]*model.Todo, error)
 	Delete(*model.Todo) error
@@ -52,6 +53,26 @@ func (ims *InMemoryStore) GetById(id int) (*model.Todo, error) {
 	if !ok {
 		return nil, ErrTodoNotFound
 	}
+
+	return todo, nil
+}
+
+func (ims *InMemoryStore) Update(id int, todo *model.Todo) (*model.Todo, error) {
+	if err := todo.IsValid(); err != nil {
+		return nil, err
+	}
+
+	ims.Lock()
+	defer ims.Unlock()
+
+	_, ok := ims.todoMap[id]
+	if !ok {
+		return nil, ErrTodoNotFound
+	}
+
+	todo.Id = id
+
+	ims.todoMap[id] = todo
 
 	return todo, nil
 }

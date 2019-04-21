@@ -247,6 +247,116 @@ func TestInMemoryStore_Delete(t *testing.T) {
 	}
 }
 
+func TestInMemoryStore_Update(t *testing.T) {
+	tests := []struct {
+		name     string
+		addTodos []*model.Todo
+		updateId int
+		todo     *model.Todo
+		wantErr  bool
+	}{
+		{
+			name:     "update non-existing",
+			addTodos: []*model.Todo{},
+			updateId: 1,
+			todo: &model.Todo{
+				Id:        1,
+				Title:     "Say hello",
+				Completed: false,
+			},
+			wantErr: true,
+		},
+		{
+			name: "update one",
+			addTodos: []*model.Todo{
+				{Title: "Hello"},
+			},
+			updateId: 1,
+			todo: &model.Todo{
+				Id:        1,
+				Title:     "Updated",
+				Completed: true,
+			},
+			wantErr: false,
+		},
+		{
+			name: "update second of three",
+			addTodos: []*model.Todo{
+				{Title: "First"},
+				{Title: "Second"},
+				{Title: "Third"},
+			},
+			updateId: 2,
+			todo: &model.Todo{
+				Id:        1,
+				Title:     "Updated",
+				Completed: true,
+			},
+			wantErr: false,
+		},
+		{
+			name: "update third of three",
+			addTodos: []*model.Todo{
+				{Title: "First"},
+				{Title: "Second"},
+				{Title: "Third"},
+			},
+			updateId: 3,
+			todo: &model.Todo{
+				Id:        1,
+				Title:     "Updated",
+				Completed: true,
+			},
+			wantErr: false,
+		},
+		{
+			name:     "nil todo",
+			addTodos: []*model.Todo{},
+			updateId: 1,
+			todo:     nil,
+			wantErr:  true,
+		},
+	}
+
+	for _, tt := range tests {
+		ims := NewInMemoryStore()
+
+		t.Run(tt.name, func(t *testing.T) {
+
+			for _, addTodo := range tt.addTodos {
+				err := ims.Add(addTodo)
+				if err != nil {
+					t.Errorf("failed adding todo: %v", err)
+					return
+				}
+			}
+
+			updatedTodo, err := ims.Update(tt.updateId, tt.todo)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("InMemoryStore.Update() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if tt.wantErr {
+				return
+			}
+
+			tt.todo.Id = tt.updateId
+			assert.Equal(t, updatedTodo, tt.todo)
+
+			readTodo, err := ims.GetById(tt.todo.Id)
+			if assert.NoError(t, err) {
+				assert.Equal(t, tt.todo, readTodo)
+			}
+
+			allTodos, err := ims.GetAll()
+			if assert.NoError(t, err) {
+				assert.Equal(t, len(allTodos), len(tt.addTodos))
+			}
+		})
+	}
+}
+
 type ById []*model.Todo
 
 func (a ById) Len() int           { return len(a) }
